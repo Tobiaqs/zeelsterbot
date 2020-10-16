@@ -34,7 +34,7 @@ def getBoodschappenList():
     with open("boodschappen.json", "r") as f:
         boodschappen = json.load(f)
         for boodschap in boodschappen:
-            text += "- " + boodschap
+            text += "- " + boodschap + "\n"
     if text == "":
         text = "De boodschappenlijst is leeg"
     return text
