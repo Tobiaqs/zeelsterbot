@@ -373,17 +373,6 @@ def get_koffie_woord():
     ])
 
 
-def send_koffie_bericht():
-    sendText(group_chat_id, "☕ Tijd voor " + get_koffie_woord() + "!")
-    return schedule.CancelJob
-
-
-def schedule_koffie_bericht():
-    nl_dt = timezone('Europe/Amsterdam').localize(datetime(2020, 10, 12, 11, 0, 0, 0))
-    utc_dt = timezone('UTC').normalize(nl_dt)
-    scheduler_time = utc_dt.isoformat().split('T')[1].split('+')[0]
-    schedule.every().day.at(scheduler_time).do(send_koffie_bericht)
-
 ###################### LOOP ################################
 # Global group_chat ID
 group_chat_id = ZEELSTER_TELEGRAM_GROUP
@@ -399,8 +388,7 @@ increment = 0
 
 # Initialize scheduled job
 # schedule.every().day.at("07:30").do(dailyJob, group_chat_id)
-# schedule.every().day.at("11:00").do(sendText, group_chat_id, "☕ Tijd voor " + get_koffie_woord() + "!")
-schedule.every().day.at("08:00").do(schedule_koffie_bericht)
+schedule.every().day.at("11:00").do(sendText, group_chat_id, "☕ Tijd voor " + get_koffie_woord() + "!")
 
 # sendText(group_chat_id, "Houzee! De chatbot leeft weer!")
 
