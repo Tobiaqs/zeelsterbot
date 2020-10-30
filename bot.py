@@ -234,6 +234,7 @@ def on_message(client, userdata, message):
 def handle(msg):
     global group_chat_id
     global chat_id
+    global sticker_set
     # Chat ID is a unique ID for every telegram chat
     chat_id = msg['chat']['id']
     # The actual message of the sender
@@ -258,6 +259,9 @@ def handle(msg):
             elif command[0:5] == "/yeet":
                 text = ["Yeet your skeet & beat your meat"]
                 bot.sendMessage(chat_id, text[0])
+
+            elif command[0:4] == "/ice":
+                bot.sendSticker(group_chat_id, choice(sticker_set["stickers"])["file_id"])
 
             elif command[0:5] == "/mexx":
                 gooiMex(chat_id, fname)
@@ -361,6 +365,8 @@ def get_koffie_woord():
     return choice([
         "koffie",
         "café",
+        "kofje",
+        "कॉफ़ी",
         "een bakkie pleur",
         "het zwarte goud",
         "een bakkie leut",
@@ -381,6 +387,9 @@ group_chat_id = ZEELSTER_TELEGRAM_GROUP
 bot = telepot.Bot(ZEELSTER_TELEGRAM_SECRET) 
 bot.message_loop(handle)
 
+# Get sticker set
+sticker_set = bot.getStickerSet("zeelsterboticestickers")
+
 # Initialize some flags
 sessionID = 0
 sessionURL = 0
@@ -389,8 +398,6 @@ increment = 0
 # Initialize scheduled job
 # schedule.every().day.at("07:30").do(dailyJob, group_chat_id)
 schedule.every().day.at("11:00").do(sendText, group_chat_id, "☕ Tijd voor " + get_koffie_woord() + "!")
-
-# sendText(group_chat_id, "Houzee! De chatbot leeft weer!")
 
 # Open while loop for receiving messages
 while 1:
