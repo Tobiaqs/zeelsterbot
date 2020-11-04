@@ -18,7 +18,7 @@ from urllib import request, parse
 import schedule
 import pandas as pd
 import ast
-from random import randrange, choice
+from random import randrange, SystemRandom
 from pytz import timezone
 
 ############# GEHEIME DINGEN ##################
@@ -26,8 +26,11 @@ load_dotenv(find_dotenv('.env'))
 ZEELSTER_TELEGRAM_SECRET = os.environ['ZEELSTER_TELEGRAM_SECRET']
 ZEELSTER_TELEGRAM_GROUP = int(os.environ['ZEELSTER_TELEGRAM_GROUP'])
 ZEELSTER_EETLIJST_WACHTWOORD = os.environ['ZEELSTER_EETLIJST_WACHTWOORD']
+ZEELSTER_ICE_STICKER_PACK = os.environ['ZEELSTER_ICE_STICKER_PACK']
 
 ############# EXTRA FUNCTIES ##################
+
+choice = SystemRandom().choice
 
 def getBoodschappenList():
     text = ""
@@ -217,6 +220,23 @@ def sendNotifyToday(info, chat_id):
     else:
         return
 
+def get_koffie_woord():
+    return choice([
+        "koffie",
+        "café",
+        "kofje",
+        "कॉफ़ी",
+        "een bakkie pleur",
+        "het zwarte goud",
+        "een bakkie leut",
+        "een bakkie troost",
+        "咖啡",
+        "een bakkie slobber",
+        "een bakkie prut",
+        "een dosis levenselixer",
+        "een meestal warm genuttigde drank, die wordt bereid op basis van water en gedroogde en gebrande pitten van de koffieplant (Coffea spp.) die vanwege hun vorm koffiebonen worden genoemd. Koffie bevat het stimulerende middel cafeïne. De meeste soorten in het geslacht Coffea komen van nature voor in tropisch Afrika en op de eilanden in de Indische Oceaan. Ze vinden hun oorsprong in Ethiopië, Jemen en Soedan."
+    ])
+
 def sendText(chat_id, text, once=False):
     bot.sendMessage(chat_id, text)
     # Remove daily job, it will only execute once
@@ -235,6 +255,7 @@ def handle(msg):
     global group_chat_id
     global chat_id
     global sticker_set
+    global sticker_set_dt
     # Chat ID is a unique ID for every telegram chat
     chat_id = msg['chat']['id']
     # The actual message of the sender
@@ -261,7 +282,14 @@ def handle(msg):
                 bot.sendMessage(chat_id, text[0])
 
             elif command[0:4] == "/ice":
+                if (datetime.now() - sticker_set_dt).seconds >= 300:
+                    # Get sticker set
+                    sticker_set = bot.getStickerSet(ZEELSTER_ICE_STICKER_PACK)
+                    sticker_set_dt = datetime.now()
                 bot.sendSticker(group_chat_id, choice(sticker_set["stickers"])["file_id"])
+            
+            elif command[0:25] == "/hetisnuooktijdvoorkoffie":
+                sendText(group_chat_id, "☕ Tijd voor " + get_koffie_woord() + "!")
 
             elif command[0:5] == "/mexx":
                 gooiMex(chat_id, fname)
@@ -361,23 +389,6 @@ def handle(msg):
     else:
         return
 
-def get_koffie_woord():
-    return choice([
-        "koffie",
-        "café",
-        "kofje",
-        "कॉफ़ी",
-        "een bakkie pleur",
-        "het zwarte goud",
-        "een bakkie leut",
-        "een bakkie troost",
-        "咖啡",
-        "een bakkie slobber",
-        "een bakkie prut",
-        "een dosis levenselixer",
-        "een meestal warm genuttigde drank, die wordt bereid op basis van water en gedroogde en gebrande pitten van de koffieplant (Coffea spp.) die vanwege hun vorm koffiebonen worden genoemd. Koffie bevat het stimulerende middel cafeïne. De meeste soorten in het geslacht Coffea komen van nature voor in tropisch Afrika en op de eilanden in de Indische Oceaan. Ze vinden hun oorsprong in Ethiopië, Jemen en Soedan."
-    ])
-
 
 ###################### LOOP ################################
 # Global group_chat ID
@@ -385,15 +396,17 @@ group_chat_id = ZEELSTER_TELEGRAM_GROUP
 
 # Initialize Telegram bot
 bot = telepot.Bot(ZEELSTER_TELEGRAM_SECRET) 
-bot.message_loop(handle)
 
 # Get sticker set
-sticker_set = bot.getStickerSet("zeelsterboticestickers")
+sticker_set = bot.getStickerSet(ZEELSTER_ICE_STICKER_PACK)
+sticker_set_dt = datetime.now()
 
 # Initialize some flags
 sessionID = 0
 sessionURL = 0
 increment = 0
+
+bot.message_loop(handle)
 
 # Initialize scheduled job
 # schedule.every().day.at("07:30").do(dailyJob, group_chat_id)
