@@ -30,7 +30,11 @@ ZEELSTER_ICE_STICKER_PACK = os.environ['ZEELSTER_ICE_STICKER_PACK']
 
 ############# EXTRA FUNCTIES ##################
 
-choice = SystemRandom().choice
+rand = SystemRandom()
+
+def choice(arr):
+    rand.seed(time.time())
+    return rand.choice(arr)
 
 def getBoodschappenList():
     text = ""
