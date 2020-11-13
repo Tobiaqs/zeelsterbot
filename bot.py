@@ -20,6 +20,8 @@ import pandas as pd
 import ast
 from random import randrange, SystemRandom
 from pytz import timezone
+from threading import Thread
+from functools import partial
 
 ############# GEHEIME DINGEN ##################
 load_dotenv(find_dotenv('.env'))
@@ -77,18 +79,29 @@ def removeFromBoodschappenList(item):
 def gooiMex(chat_id, fname):
     throw_1 = randrange(1,7)
     throw_2 = randrange(1,7)
-    if throw_1 == throw_2:
-        score = str(throw_1*100)
-    elif throw_1 > throw_2:
-        score = str(throw_1)+str(throw_2)
+    off_table = randrange(100) < 10
+    bokkie = randrange(100) < 2
+    if off_table:
+        text = f"{fname} heeft de stenen van de tafel geyeet! Zuipen kut!"
+    elif bokkie:
+        text = f"{fname} heeft bokkie gegooid! Zuipen hoer!"
+        def reminder_worp_ongeldig(fname):
+            time.sleep(5)
+            sendText(chat_id, f"BTW je worp geldt niet, {fname}.")
+        Thread(target=partial(reminder_worp_ongeldig, fname)).start()
     else:
-        score = str(throw_2)+str(throw_1)
-    if score == "21":
-        text = "{:s} heeft {:s} en {:s} gegooid!\nJe hebt Mexx gegooid!!".format(fname, str(throw_1), str(throw_2))
-    elif score == "600":
-        text = "{:s} heeft {:s} en {:s} gegooid!\nJe score is {:s} dus je bent de Ombudsman\nJe moet drinken bij elk honderdtal!".format(fname, str(throw_1), str(throw_2), score)
-    else:
-        text = "{:s} heeft {:s} en {:s} gegooid!\nJe score is {:s}!!".format(fname, str(throw_1), str(throw_2), score)
+        if throw_1 == throw_2:
+            score = str(throw_1*100)
+        elif throw_1 > throw_2:
+            score = str(throw_1)+str(throw_2)
+        else:
+            score = str(throw_2)+str(throw_1)
+        if score == "21":
+            text = "{:s} heeft {:s} en {:s} gegooid!\nJe hebt Mexx gegooid!!".format(fname, str(throw_1), str(throw_2))
+        elif score == "600":
+            text = "{:s} heeft {:s} en {:s} gegooid!\nJe score is {:s} dus je bent de Ombudsman\nJe moet drinken bij elk honderdtal!".format(fname, str(throw_1), str(throw_2), score)
+        else:
+            text = "{:s} heeft {:s} en {:s} gegooid!\nJe score is {:s}!!".format(fname, str(throw_1), str(throw_2), score)
     sendText(chat_id, text)
     return
 
