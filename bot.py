@@ -18,10 +18,14 @@ from urllib import request, parse
 import schedule
 import pandas as pd
 import ast
-from random import randrange, SystemRandom
+from random import SystemRandom
 from pytz import timezone
 from threading import Thread
 from functools import partial
+
+# good random methods
+choice = SystemRandom().choice
+randrange = SystemRandom().randrange
 
 ############# GEHEIME DINGEN ##################
 load_dotenv(find_dotenv('.env'))
@@ -31,12 +35,6 @@ ZEELSTER_EETLIJST_WACHTWOORD = os.environ['ZEELSTER_EETLIJST_WACHTWOORD']
 ZEELSTER_ICE_STICKER_PACK = os.environ['ZEELSTER_ICE_STICKER_PACK']
 
 ############# EXTRA FUNCTIES ##################
-
-rand = SystemRandom()
-
-def choice(arr):
-    rand.seed(time.time())
-    return rand.choice(arr)
 
 def getBoodschappenList():
     text = ""
@@ -237,7 +235,7 @@ def sendNotifyToday(info, chat_id):
     else:
         return
 
-def get_koffie_woord():
+def getKoffieWoord():
     return choice([
         "koffie",
         "café",
@@ -248,11 +246,16 @@ def get_koffie_woord():
         "een bakkie leut",
         "een bakkie troost",
         "咖啡",
+        "K̺͎̟̫͐͡Ȍ͔̠̩̜͕̖̤͖ͫ̈͠F͙̪͖͋̕F͈̮͖͇̰̽ͯ͐̂͘I̘̭͎̮͉̭̳ͧ͞E̢͎͔̗̍ͫ͂",
+        "(Ɔ ˘⌣˘)♥ＫＯＦＦＩＥ♥(˘⌣˘ C) ",
         "een bakkie slobber",
         "een bakkie prut",
         "een dosis levenselixer",
         "een meestal warm genuttigde drank, die wordt bereid op basis van water en gedroogde en gebrande pitten van de koffieplant (Coffea spp.) die vanwege hun vorm koffiebonen worden genoemd. Koffie bevat het stimulerende middel cafeïne. De meeste soorten in het geslacht Coffea komen van nature voor in tropisch Afrika en op de eilanden in de Indische Oceaan. Ze vinden hun oorsprong in Ethiopië, Jemen en Soedan."
     ])
+
+def sendKoffieBericht():
+    sendText(group_chat_id, "☕ Tijd voor " + getKoffieWoord() + "!")
 
 def sendText(chat_id, text, once=False):
     bot.sendMessage(chat_id, text)
@@ -306,7 +309,7 @@ def handle(msg):
                 bot.sendSticker(group_chat_id, choice(sticker_set["stickers"])["file_id"])
             
             elif command[0:25] == "/hetisnuooktijdvoorkoffie":
-                sendText(group_chat_id, "☕ Tijd voor " + get_koffie_woord() + "!")
+                sendText(group_chat_id, "☕ Tijd voor " + getKoffieWoord() + "!")
 
             elif command[0:5] == "/mexx":
                 gooiMex(chat_id, fname)
@@ -427,7 +430,7 @@ bot.message_loop(handle)
 
 # Initialize scheduled job
 # schedule.every().day.at("07:30").do(dailyJob, group_chat_id)
-schedule.every().day.at("11:00").do(sendText, group_chat_id, "☕ Tijd voor " + get_koffie_woord() + "!")
+schedule.every().day.at("11:00").do(sendKoffieBericht)
 
 # Open while loop for receiving messages
 while 1:
