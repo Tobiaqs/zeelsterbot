@@ -270,7 +270,7 @@ def on_message(client, userdata, message):
     print("Message received: {received}".format(received = str(message.payload.decode("utf-8"))))
     return
 
-def addKosten(customer, benificiary, pages, amount):
+def addKosten(payer, beneficiary, comment, amount):
     [url, ID] = openSession()
     soup = getSoup('http://eetlijst.nl/kosten.php?session_id='+str(ID))
     today = soup.select("form table tr:nth-child(4) td nobr")[0].get_text().strip().split(" ")[1]
@@ -278,15 +278,15 @@ def addKosten(customer, benificiary, pages, amount):
     data = parse.urlencode({
         "session_id": ID,
         "extradatum": today,
-        "extravoorwie[]": customer,
-        "extrawie": benificiary,
-        "extrawat": f"Printkosten {pages} pagina's",
-        "extrahoeveel": str(amount)
+        "extravoorwie[]": payer,
+        "extrawie": beneficiary,
+        "extrawat": comment,
+        "extrahoeveel": f"{amount:.2f}"
     }).encode()
 
     url = 'http://eetlijst.nl/kosten.php'
     req =  request.Request(url, data=data)
-    resp = request.urlopen(req)
+    request.urlopen(req)
 
     return
 
@@ -388,15 +388,58 @@ def handle(msg):
                 # Get number of user on eetlijst
                 eters_lower = [item.lower() for item in getEtersOpEetlijst(soup)]
                 try:
-                    customer = eters_lower.index(print_name.lower())
-                    benificiary = eters_lower.index("tobias")
+                    payer = eters_lower.index(print_name.lower())
+                    beneficiary = eters_lower.index("tobias")
                 except ValueError:
                     bot.sendMessage(chat_id, "Naam niet gevonden.")
                     return
 
+                # Check that user is not giving themselves money
+                if beneficiary == payer:
+                    bot.sendMessage(chat_id, "Zo, dus jij probeert geld bij te drukken?\n\nMag niet.")
+                    return
+
                 # Perform request
-                addKosten(customer, benificiary, print_pages, print_costs)
+                addKosten(payer, beneficiary, f"Printkosten {print_pages} pagina's", print_costs)
                 bot.sendMessage(chat_id, f"{print_name} heeft {print_pages} pagina's geprint.\n\nHet bedrag van {print_costs:.2f} EUR is overgeschreven op Eetlijst.")
+
+            elif command.startswith("/betaal"):
+                # Open session on eetlijst.nl
+                [url, ID] = openSession()
+                # Get HTML things
+                soup = getSoup(url)
+                # Determine print name
+                print_info = command.split(" ")
+                # Check print info
+                if len(print_info) != 3:
+                    bot.sendMessage(chat_id, "Ongeldig commando!")
+                    return
+
+                # Determine name and pages
+                beneficiary_name = unidecode.unidecode(print_info[1])
+                try:
+                    amount = float(print_info[2])
+                except ValueError:
+                    bot.sendMessage(chat_id, "Ongeldig bedrag!")
+                    return
+
+                # Get number of user on eetlijst
+                eters_lower = [item.lower() for item in getEtersOpEetlijst(soup)]
+                try:
+                    beneficiary = eters_lower.index(beneficiary_name.lower())
+                    payer = eters_lower.index(fname.lower())
+                except ValueError:
+                    bot.sendMessage(chat_id, "Naam niet gevonden.")
+                    return
+
+                # Check that user is not giving themselves money
+                if beneficiary == payer:
+                    bot.sendMessage(chat_id, "Zo, dus jij probeert geld bij te drukken?\n\nMag niet.")
+                    return
+
+                # Perform request
+                addKosten(payer, beneficiary, "Overboeking Telegram", amount)
+                bot.sendMessage(chat_id, f"{fname} heeft {amount:.2f} EUR aan {beneficiary_name} overgeboekt op Eetlijst.")
 
             elif command.startswith("/koken"):
                 # Open session on eetlijst.nl
