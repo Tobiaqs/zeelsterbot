@@ -270,6 +270,26 @@ def on_message(client, userdata, message):
     print("Message received: {received}".format(received = str(message.payload.decode("utf-8"))))
     return
 
+def addKosten(customer, benificiary, pages, amount):
+    [url, ID] = openSession()
+    soup = getSoup('http://eetlijst.nl/kosten.php?session_id='+str(ID))
+    today = soup.select("form table tr:nth-child(4) td nobr")[0].get_text().strip().split(" ")[1]
+
+    data = parse.urlencode({
+        "session_id": ID,
+        "extradatum": today,
+        "extravoorwie[]": customer,
+        "extrawie": benificiary,
+        "extrawat": f"Printkosten {pages} pagina's",
+        "extrahoeveel": str(amount)
+    }).encode()
+
+    url = 'http://eetlijst.nl/kosten.php'
+    req =  request.Request(url, data=data)
+    resp = request.urlopen(req)
+
+    return
+
 # Message handler function
 def handle(msg):
     global group_chat_id
@@ -294,27 +314,27 @@ def handle(msg):
 
         if (chat_id == group_chat_id or groupchatmember == True) and command[0] == "/":
             # Act on commands
-            if command[0:5] == '/Heey': 
+            if command.startswith('/Heey'):
                 bot.sendMessage(chat_id, 'Alloah')
 
-            elif command[0:5] == "/yeet":
+            elif command.startswith("/yeet"):
                 text = ["Yeet your skeet & beat your meat"]
                 bot.sendMessage(chat_id, text[0])
 
-            elif command[0:4] == "/ice":
+            elif command.startswith("/ice"):
                 if (datetime.now() - sticker_set_dt).seconds >= 300:
                     # Get sticker set
                     sticker_set = bot.getStickerSet(ZEELSTER_ICE_STICKER_PACK)
                     sticker_set_dt = datetime.now()
                 bot.sendSticker(group_chat_id, choice(sticker_set["stickers"])["file_id"])
             
-            elif command[0:25] == "/hetisnuooktijdvoorkoffie":
+            elif command.startswith("/hetisnuooktijdvoorkoffie"):
                 sendText(group_chat_id, "☕ Tijd voor " + getKoffieWoord() + "!")
 
-            elif command[0:5] == "/mexx":
+            elif command.startswith("/mexx"):
                 gooiMex(chat_id, fname)
             
-            elif command[0:13] == "/uitschrijven":
+            elif command.startswith("/uitschrijven"):
                 # Open session on eetlijst.nl
                 [url, ID] = openSession()
                 # Get HTML things
@@ -329,7 +349,7 @@ def handle(msg):
                 inschrijfRequest(-5, number, daycode)
                 bot.sendMessage(chat_id, "{:s} is uitgeschreven voor vandaag".format(fname))
 
-            elif command[0:12] == "/inschrijven":
+            elif command.startswith("/inschrijven"):
                 # Open session on eetlijst.nl
                 [url, ID] = openSession()
                 # Get HTML things
@@ -342,7 +362,43 @@ def handle(msg):
                 inschrijfRequest(-1, number, daycode)
                 bot.sendMessage(chat_id, "{:s} is ingeschreven voor vandaag".format(fname))
 
-            elif command[0:6] == "/koken":
+            elif command.startswith("/tobiasprint"):
+                # Open session on eetlijst.nl
+                [url, ID] = openSession()
+                # Get HTML things
+                soup = getSoup(url)
+                # Determine print name
+                print_info = command.split(" ")
+                # Check print info
+                if len(print_info) != 3:
+                    bot.sendMessage(chat_id, "Ongeldig commando!")
+                    return
+
+                # Determine name and pages
+                print_name = unidecode.unidecode(print_info[1])
+                try:
+                    print_pages = int(print_info[2])
+                except ValueError:
+                    bot.sendMessage(chat_id, "Ongeldig aantal pagina's!")
+                    return
+
+                # Calculate print costs
+                print_costs = 0.05 * print_pages
+
+                # Get number of user on eetlijst
+                eters_lower = [item.lower() for item in getEtersOpEetlijst(soup)]
+                try:
+                    customer = eters_lower.index(print_name.lower())
+                    benificiary = eters_lower.index("tobias")
+                except ValueError:
+                    bot.sendMessage(chat_id, "Naam niet gevonden.")
+                    return
+
+                # Perform request
+                addKosten(customer, benificiary, print_pages, print_costs)
+                bot.sendMessage(chat_id, f"{print_name} heeft {print_pages} pagina's geprint.\n\nHet bedrag van {print_costs:.2f} EUR is overgeschreven op Eetlijst.")
+
+            elif command.startswith("/koken"):
                 # Open session on eetlijst.nl
                 [url, ID] = openSession()
                 # Get HTML things
@@ -360,15 +416,15 @@ def handle(msg):
                 else:
                     bot.sendMessage(chat_id, "{:s} al, maar jij kan morgen misschien wel koken!".format(kok))
 
-            elif command[0:20] == "/ishetaltijdvoorbier":
+            elif command.startswith("/ishetaltijdvoorbier"):
                 bot.sendMessage(chat_id, "Water is pas een feest als het langs de brouwer is geweest!")
 
-            elif command[0:4] == "/'Vo" or command[0:4] == "/‘Vo":
+            elif command.startswith("/'Vo") or command.startswith("/‘Vo"):
                 text_arr = ["'Vo voor de praeses!", "Hé Lullo, nog geneukt?", "Ad fundum", "Anti'Vo, Lul", "Goed man lul", "Ga een behoorlijke baan zoeken man!", "Kom dan {:s}".format(fname)]
                 randint = randrange(len(text_arr))
                 bot.sendMessage(chat_id, text_arr[randint])
 
-            elif command[0:6] == '/eters':
+            elif command.startswith('/eters'):
                 [url, ID] = openSession()
                 soup = getSoup(url)
                 # Get number and names of eters
@@ -377,23 +433,23 @@ def handle(msg):
                 text = "Er eten {:d} mensen mee\n{:s}".format(nof_eters, ", ".join([str(x) for x in eters]))
                 bot.sendMessage(chat_id, text)
 
-            elif command[0:4] == '/kok':
+            elif command.startswith('/kok'):
                 [url, ID] = openSession()
                 soup = getSoup(url)
                 bot.sendMessage(chat_id, getKok(soup, getThisDay()))
 
-            elif command[0:13] == '/boodschappen':
+            elif command.startswith('/boodschappen'):
                 currentlist = getBoodschappenList()
                 bot.sendMessage(chat_id, currentlist)
 
-            elif command[0:17] == '/voegboodschaptoe':
+            elif command.startswith('/voegboodschaptoe'):
                 item = command[18:]
                 if addToBoodschappenList(item):
                     bot.sendMessage(chat_id, "{:s} is toegevoegd aan de boodschappenlijst!".format(str(item)))
                 else: 
                     bot.sendMessage(chat_id, "Die staat er al op, lul.")
 
-            elif command[0:19] == '/verwijderboodschap':
+            elif command.startswith('/verwijderboodschap'):
                 item = command[20:]
                 if removeFromBoodschappenList(item):
                     bot.sendMessage(chat_id, "{:s} is verwijderd van de boodschappenlijst!".format(str(item)))
