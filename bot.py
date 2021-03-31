@@ -399,9 +399,11 @@ def handle(msg):
                     bot.sendMessage(chat_id, "Zo, dus jij probeert geld bij te drukken?\n\nMag niet.")
                     return
 
+                page_str = "pagina" if print_pages == 1 else "pagina's"
+
                 # Perform request
-                addKosten(payer, beneficiary, f"Printkosten {print_pages} pagina's", print_costs)
-                bot.sendMessage(chat_id, f"{print_name} heeft {print_pages} pagina's geprint.\n\nHet bedrag van {print_costs:.2f} EUR is overgeschreven op Eetlijst.")
+                addKosten(payer, beneficiary, f"Printkosten {print_pages} {page_str}", print_costs)
+                bot.sendMessage(chat_id, f"{print_name} heeft {print_pages} {page_str} geprint.\n\nHet bedrag van {print_costs:.2f} EUR is overgeschreven op Eetlijst.")
 
             elif command.startswith("/betaal"):
                 # Open session on eetlijst.nl
