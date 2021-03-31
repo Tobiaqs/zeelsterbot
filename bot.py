@@ -6,26 +6,27 @@
 ############# IMPORTS #############
 
 from dotenv import find_dotenv, load_dotenv
-import os
+import os, telepot, time, json, unidecode, schedule, ast
 from bs4 import BeautifulSoup
-import telepot
 from telepot.namedtuple import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove, ForceReply
-import time
-import json
-import unidecode
 from datetime import datetime, timedelta, date
 from urllib import request, parse
-import schedule
 import pandas as pd
-import ast
 from random import SystemRandom
 from pytz import timezone
 from threading import Thread
 from functools import partial
+from signal import signal, SIGTERM
 
 # good random methods
 choice = SystemRandom().choice
 randrange = SystemRandom().randrange
+
+# handle docker's SIGTERM
+def handle_sigterm(*args):
+    raise KeyboardInterrupt()
+
+signal(SIGTERM, handle_sigterm)
 
 ############# GEHEIME DINGEN ##################
 load_dotenv(find_dotenv('.env'))
